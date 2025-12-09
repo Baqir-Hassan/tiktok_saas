@@ -1,0 +1,43 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    container_name: web_server
+    command: gunicorn --bind 0.0.0.0:5000 app.main:app
+    volumes:
+      - ./app:/app/app
+      - ./output_videos:/app/output_videos
+    ports:
+      - "5000:5000"
+    env_file: .env
+
+  celery-worker:
+    build: .
+    container_name: celery_worker
+    # This command assumes your Celery app instance is discoverable in app.tasks.tasks
+    command: celery -A app.tasks.tasks worker --loglevel=info -c 1
+    volumes:
+      # Mount the entire app directory
+      - ./app:/app/app
+      # Mount output folder to see generated videos on your host machine
+      - ./output_videos:/app/output_videos
+      # Mount assets like the Minecraft video and fonts
+      - ./assets:/app/assets
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  flower:
+    image: mher/flower
+    container_name: flower
+    command: flower --broker=redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis

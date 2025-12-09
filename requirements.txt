@@ -1,0 +1,13 @@
+python-dotenv
+celery[redis]
+gunicorn
+flower
+requests
+google-generativeai
+edge-tts
+moviepy
+Pillow
+openai-whisper
+torch
+numpy
+praw
